@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carl's Jr. Social Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --background: #ffffff;
+            --foreground: #000000;
+            --muted: #f1f5f9;
+            --muted-foreground: #64748b;
+            --border: #e2e8f0;
+            --input: #e2e8f0;
+            --ring: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 28rem;
+            margin: 0 auto;
+            padding: 1.5rem 1rem;
+        }
+
+        h1,
+        h2 {
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card {
+            background-color: var(--background);
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .metric-icon {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .metric-label {
+            font-size: 0.625rem;
+            text-transform: uppercase;
+            color: var(--muted-foreground);
+        }
+
+        .performance p {
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .performance span {
+            font-weight: 600;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--muted-foreground);
+            position: sticky;
+            top: 0;
+            background-color: var(--background);
+            z-index: 10;
+        }
+
+        ul {
+            padding-left: 1.25rem;
+            font-size: 0.875rem;
+        }
+
+        li {
+            margin-bottom: 0.25rem;
+        }
+
+        .divider {
+            border-top: 1px dotted var(--border);
+            margin: 1.5rem 0;
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto 1.5rem auto;
+            position: relative;
+            height: 300px;
+        }
+
+        .social-filters {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .social-button {
+            background: none;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .social-button.active {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .social-button:hover {
+            border-color: #3b82f6;
+        }
+
+        .social-button svg {
+            width: 24px;
+            height: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Carl's Jr. Social Tracker</h1>
+
+        <section class="card">
+            <h2>Key Metrics</h2>
+            <div class="social-filters">
+                <button class="social-button active" id="facebook-filter">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </button>
+                <button class="social-button" id="instagram-filter">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="chart-container">
+                <canvas id="engagementChart"></canvas>
+            </div>
+            <div class="metrics">
+                <div>
+                    <div class="metric-value">4</div>
+                    <div class="metric-label">Adoptions</div>
+                </div>
+                <div>
+                    <div class="metric-value">68</div>
+                    <div class="metric-label">Materials Delivered</div>
+                </div>
+                <div>
+                    <div class="metric-value">6</div>
+                    <div class="metric-label">Markets Engaged</div>
+                </div>
+                <div>
+                    <div class="metric-value">250</div>
+                    <div class="metric-label">Post analyzed</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Social Media Performance</h2>
+            <div class="performance">
+                <p><span>Audience:</span> Teenagers and Young Adults</p>
+                <p><span>Mindset:</span> Fun and Casual</p>
+                <p><span>Theme:</span> Sharing and Enjoying Moments</p>
+                <p><span>Branding:</span> Active and Energetic</p>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Matched Posts</h2>
+            <ul>
+                <li><a href="https://www.facebook.com/CJrMalaysia/">Tag a fry thief.</a></li>
+                <li><a href="https://www.facebook.com/CJrMalaysia/">When you're so close that you finish each other's sentences, and fries.</a></li>
+                <li><a href="https://www.facebook.com/CarlsJrAU/">Happiness in the palm of my hand.</a></li>
+                <li><a href="https://www.facebook.com/CJrMalaysia/">Were we supposed to wait?</a></li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <h2>Most Popular Posts</h2>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Post</th>
+                            <th>Name</th>
+                            <th>Reach</th>
+                            <th>Country</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><img src="https://scontent.faep9-1.fna.fbcdn.net/v/t39.30808-6/434357930_803180481839979_2522963762574355598_n.jpg?stp=dst-jpg_s640x640&_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeGi5MDzK2gYI1YDFMtMMeI80S5F2ZC2GovRLkXZkLYaiwA8QLeIkKu8xF7lQ-DwHWE&_nc_ohc=j2rR-XhSzn0Q7kNvgGCgjpq&_nc_zt=23&_nc_ht=scontent.faep9-1.fna&_nc_gid=A-V5XjjRwRRpO86zQVGD7a6&oh=00_AYC7sP7IlPzLr8XJ_45NrhzhTYBl-csnUQQ6jgvMSCeMlw&oe=671EE0BF" alt="Summer Burger" class="post-image" style="width: 50px;height: 50px;border-radius: 10px;"></td>
+                            <td>Our Oreo shake, made with real biscuit bits and hand-scooped ice cream blended with milk</td>
+                            <td>784</td>
+                            <td><img src="https://flagcdn.com/w20/nz.png" alt="NZ flag" class="country-flag"></td>
+                            <td>
+                                <a href="https://www.facebook.com/carlsjrnz/posts/pfbid02LU8YktGJuoeJUoQvQQeAt1wPrGJuY9jAGuaeTGHLH92PJxeMC1EGNSZXNyHjJ2Yjl">
+                                    <svg class="icon link-icon" viewBox="0 0 24 24">
+                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                    </svg>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><img src="https://scontent.faep9-3.fna.fbcdn.net/v/t39.30808-6/433677808_799516125539748_2706820505980170381_n.jpg?stp=dst-jpg_s640x640&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeEb361IOb36M2YHxDww4PJuW3vojycgNUdbe-iPJyA1R2CNNs96BX70n_FvaCSzw-s&_nc_ohc=Rc-gV8raMW8Q7kNvgFkn-4W&_nc_zt=23&_nc_ht=scontent.faep9-3.fna&_nc_gid=AOnzTijbsb7pjuRlzlW0FnC&oh=00_AYB0lKnKtsHoKFepz_4WgT8G0MnCxYIsRavcJdOjSR5F6A&oe=671EFE91" alt="Summer Burger" class="post-image" style="width: 50px;height: 50px;border-radius: 10px;"></td>
+                            <td>Western Bacon Big Angus looking mighty fine</td>
+                            <td>566</td>
+                            <td><img src="https://flagcdn.com/w20/nz.png" alt="NZ flag" class="country-flag"></td>
+                            <td>
+                                <a href="https://www.facebook.com/carlsjrnz/posts/pfbid0PYULM4eSNPqNTTj1uLTVANMhwcwQtRCrPXyYjSJZftRwzLj8oewWSMFVcwPSXR3Pl">
+                                    <svg class="icon link-icon" viewBox="0 0 24 24">
+                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                    </svg>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><img src="https://scontent.faep9-1.fna.fbcdn.net/v/t39.30808-6/431625038_792938652864162_481757864342438121_n.jpg?stp=dst-jpg_s640x640&_nc_cat=109&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeGgzgxarEOjjigkiDW3tRb3BBzFtEf7xJQEHMW0R_vElFAXGN9LFBKcynsKcuXUxq4&_nc_ohc=lbhWewXzsy8Q7kNvgFZOkp1&_nc_zt=23&_nc_ht=scontent.faep9-1.fna&_nc_gid=AfPfozy4PR1SrkQwL_Gt8x7&oh=00_AYBDPx2MbF6VjFj4R-BuPy696Se0zuJyFZnVW0_HJgfBCg&oe=671EF709" alt="Summer Burger" class="post-image" style="width: 50px;height: 50px;border-radius: 10px;"></td>
+                            <td>We mean it when we say hand-scooped milkshake is available in Salted Caramel, Chocolate, Vanilla, Oreo or Strawberry.</td>
+                            <td>546</td>
+                            <td><img src="https://flagcdn.com/w20/nz.png" alt="NZ flag" class="country-flag"></td>
+                            <td>
+                                <a href="https://www.facebook.com/carlsjrnz/posts/pfbid02o3jtzWTqwRiqS66J6ZaE2MuJFBJqDcrJBaFydRDSb9Sg7KEUiYYMBCCVckfrb8WDl">
+                                    <svg class="icon link-icon" viewBox="0 0 24 24">
+                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                    </svg>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Insights</h2>
+            <p>Understanding the preferences of different market regions and aligning marketing strategies to enhance brand loyalty.</p>
+        </section>
+
+        <section class="card">
+            <h2>Suggestions</h2>
+            <p>Increase engagement by integrating customer stories and experiences into brand narratives.</p>
+        </section>
+    </div>
+
+    <script>
+        let chart;
+        const facebookData = [0, 1, 0, 0, 3, 2];
+        const instagramData = [0, 0, 0, 0, 0, 0];
+        const labels = ['American Samoa', 'Australia', 'India', 'New Zealand', 'Malaysia', 'Singapore'];
+        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+
+        function initChart(data) {
+            const ctx = document.getElementById('engagementChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Post adoptions',
+                            font: {
+                                size: 16
+                            },
+                            padding: {
+                                bottom: 20
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize chart with Facebook data
+        initChart(facebookData);
+
+        // Add click event listeners to filter buttons
+        document.getElementById('facebook-filter').addEventListener('click', function() {
+            document.querySelectorAll('.social-button').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            initChart(facebookData);
+        });
+
+        document.getElementById('instagram-filter').addEventListener('click', function() {
+            document.querySelectorAll('.social-button').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            initChart(instagramData);
+        });
+    </script>
+</body>
+
+</html>
